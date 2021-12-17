@@ -1,0 +1,120 @@
+---
+title: "Homework- Traffic Accident"
+author: "Yu-Min, Liao"
+date: "12/12/2021"
+output: html_document
+runtime: shiny
+---
+
+#### 1. Preprocess data 預處理資料
+自政府資料開放平臺：https://data.gov.tw/dataset/12197 下載109年度交通事故資料合計共3個檔案（109年A1交通事故資料.csv、109年A2交通事故資料(109年1月-6月).csv、109年A2交通事故資料(109年7月-12月)。 
+預先將檔案從中篩選出「新竹市」的交通事故、合併A2兩個檔案並僅留下經緯度。分別另存為兩個檔案：hsinchu_109_A1.csv、hsinchu_109_A2.csv。
+
+#### 2. Install packages 安裝所需套件
+```{r echo = FALSE}
+if(! require("rstudioapi")) install.packages("rstudioapi")
+library(rstudioapi)
+
+if(! require("ggplot2")) install.packages("ggplot2")
+library(ggplot2)
+
+if(! require("ggmap")) install.packages("ggmap")
+library(ggmap)
+```
+
+#### 3. Read data
+```{r}
+A1<- read.csv("hsinchu_109_A1.csv", header = TRUE)
+A2<- read.csv("hsinchu_109_A2.csv", header = TRUE)
+```
+
+#### 4. Making Maps
+```{r echo = FALSE}
+#Set API Key
+ggmap::register_google(key = "AIzaSyBmGg9PMd0OZ8tHZdxvsPsIXp4W16fP1zA")
+```
+
+```{r}
+#Get Hsinchu City's Map
+map<- ggmap(get_googlemap(center = c(lon=120.9667, lat=24.8), 
+                        zoom = 13, scale = 2,
+                        maptype = "terrain",
+                        color = "color",
+                        extent = "device"))
+map
+```
+```{r}
+#Create color variables for graphing
+col1 = "#011f4b" #Very dark blue
+col2 = "#6497b1" #Mostly desaturated dark blue
+col3 = "#b3cde0" #Very soft blue
+col4 = "#CC0000" #Strong red
+```
+
+#### 5. Create a map with all A1 accident locations plotted
+```{r}
+#heatmap
+ggplot() +
+  stat_density2d(data = A1, 
+                 aes(x = longitude, y = latitude, fill = ..density..), 
+                 geom = 'tile', 
+                 contour = F)
+```
+
+```{r}
+map+
+  geom_point(
+    aes(x = longitude, y = latitude, color= col3),
+    data= A1, 
+    size= 0.5)+ 
+  theme(legend.position = "bottom")
+```
+
+```{r}
+map+
+  stat_density2d(
+    aes(x = longitude, y = latitude, fill = ..level.., alpha= 0.05), 
+    bins= 10, 
+    data= A1, 
+    geom= "polygon")
+```
+
+```{r}
+map+
+  geom_point(
+    aes(x = longitude, y = latitude, color= col3),
+    data= A1, 
+    size= 0.5)+ 
+  theme(legend.position = "bottom")+
+  
+  
+```
+
+
+#### 6. Create a map with all A2 accident locations plotted
+```{r}
+map+
+  geom_point(
+    aes(x = longitude, y = latitude, colour= col3), 
+    data= A2, 
+    alpha= 0.25, 
+    size= 0.05)+ 
+  theme(legend.position = "none")
+```
+
+```{r}
+map+
+  stat_density2d(
+    aes(x = longitude, y = latitude, fill = ..level.., alpha= 0.05),
+    size= 0.1, 
+    bins= 10, 
+    data= A2, 
+    geom= "polygon")+
+  stat_density2d(
+    aes(x = longitude, y = latitude, fill = ..level.., alpha= 0.05), 
+    bins= 10, 
+    data= A1, 
+    geom= "polygon")
+                 
+```
+
